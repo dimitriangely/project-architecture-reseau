@@ -29,9 +29,11 @@ run router1 "sudo vtysh -c 'show ip ospf neighbor'"
 echo "[+] Voisins OSPF router2"
 run router2 "sudo vtysh -c 'show ip ospf neighbor'"
 
-echo "[+] Contrôleur : br0 et Ryu"
+echo "[+] Contrôleur : br0, OVS et Ryu"
 run controller "ip -4 addr show br0 | grep -q '10.10.10.10/'"
 run controller "sudo ovs-vsctl br-exists br0 && sudo ovs-vsctl get-controller br0 | grep -q 6633"
-run controller "pgrep -f ryu.cmd.manager >/dev/null && echo 'Ryu actif'"
+run controller "python3.9 -c 'from ryu import cfg; import netaddr, tinyrpc'"
+run controller "pgrep -af '[p]ython3.9 -m ryu.cmd.manager'"
+run controller "test -f /home/vagrant/ryu.log && ! grep -qE 'ModuleNotFoundError|Traceback' /home/vagrant/ryu.log && echo 'Ryu actif (log OK)'"
 
 echo "[✓] Vérifications terminées"

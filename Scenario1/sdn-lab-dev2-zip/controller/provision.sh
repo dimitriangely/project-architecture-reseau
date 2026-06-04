@@ -36,6 +36,10 @@ echo "[+] Installation de Ryu et des dépendances compatibles"
 sudo apt-get install -y python3.9-dev build-essential
 sudo python3.9 -m pip install "setuptools==59.8.0" wheel
 sudo python3.9 -m pip install greenlet==1.1.3 eventlet==0.30.2 dnspython==1.16.0
+# Dépendances runtime de ryu-manager (non installées par setup.py seul)
+sudo python3.9 -m pip install \
+  netaddr webob routes "msgpack>=0.3.0" \
+  "oslo.config>=2.5.0" tinyrpc
 if ! python3.9 -c "import ryu" &>/dev/null; then
   RYU_TMP=$(mktemp -d)
   curl -fsSL -o "$RYU_TMP/ryu.tar.gz" https://files.pythonhosted.org/packages/source/r/ryu/ryu-4.34.tar.gz
@@ -43,6 +47,7 @@ if ! python3.9 -c "import ryu" &>/dev/null; then
   (cd "$RYU_TMP/ryu-4.34" && sudo python3.9 setup.py install)
   rm -rf "$RYU_TMP"
 fi
+python3.9 -c "import netaddr, webob, routes, msgpack, oslo_config, tinyrpc"
 
 echo "[+] Démarrage du service Open vSwitch"
 sudo systemctl enable openvswitch-switch
@@ -50,6 +55,7 @@ sudo systemctl start openvswitch-switch
 sleep 2
 
 echo "[+] Application Netplan (bridge OVS br0 + 10.10.10.10)"
+sudo chmod 600 /etc/netplan/01-netcfg.yaml
 sudo netplan apply
 sleep 2
 
@@ -114,6 +120,12 @@ sleep 1
 
 echo "[+] Lancement de Ryu"
 nohup python3.9 -m ryu.cmd.manager /home/vagrant/ryu-app/forward_all.py > /home/vagrant/ryu.log 2>&1 &
+sleep 3
+if ! pgrep -f 'python3.9 -m ryu.cmd.manager' >/dev/null; then
+  echo "[!] Ryu n'a pas démarré — dernières lignes du log :"
+  tail -30 /home/vagrant/ryu.log || true
+  exit 1
+fi
 
 echo "[✓] Ryu en cours — logs : tail -f /home/vagrant/ryu.log"
 echo "[✓] IP SDN sur br0 : $(ip -4 addr show br0 | awk '/inet / {print $2}')"
