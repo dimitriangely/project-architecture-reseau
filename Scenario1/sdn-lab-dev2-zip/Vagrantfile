@@ -1,0 +1,72 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.synced_folder ".", "/vagrant"
+
+  # IPs gérées par Netplan dans les scripts provision (évite double config Vagrant)
+  machines = {
+    "controller" => "10.10.10.10",
+    "router1"    => "10.10.10.11",
+    "router2"    => "10.10.10.12",
+    "client1"    => "10.10.10.13",
+    "client2"    => "10.10.10.14"
+  }
+
+  machines.each do |name, _ip|
+    config.vm.define name do |node|
+      node.vm.hostname = name
+
+      # Réseau SDN commun (adapter 2) — auto_config: false, IP via provision
+      node.vm.network "private_network",
+        virtualbox__intnet: "sdn-net",
+        auto_config: false,
+        adapter: 2
+
+      if name == "controller"
+        node.vm.provision "shell", path: "controller/provision.sh"
+
+      elsif name == "client1"
+        node.vm.network "private_network",
+          virtualbox__intnet: "client1-router1",
+          auto_config: false,
+          adapter: 3
+        node.vm.provision "shell", path: "client1/provision.sh"
+
+      elsif name == "client2"
+        node.vm.network "private_network",
+          virtualbox__intnet: "client2-router2",
+          auto_config: false,
+          adapter: 3
+        node.vm.provision "shell", path: "client2/provision.sh"
+
+      elsif name == "router1"
+        node.vm.network "private_network",
+          virtualbox__intnet: "client1-router1",
+          auto_config: false,
+          adapter: 3
+        node.vm.network "private_network",
+          virtualbox__intnet: "router1-router2",
+          auto_config: false,
+          adapter: 4
+        node.vm.provision "shell", path: "router-provision/provision.sh"
+
+      elsif name == "router2"
+        node.vm.network "private_network",
+          virtualbox__intnet: "client2-router2",
+          auto_config: false,
+          adapter: 3
+        node.vm.network "private_network",
+          virtualbox__intnet: "router1-router2",
+          auto_config: false,
+          adapter: 4
+        node.vm.provision "shell", path: "router-provision/provision.sh"
+      end
+
+      node.vm.provider "virtualbox" do |vb|
+        vb.memory = 2048
+        vb.cpus = 1
+      end
+
+      node.vm.boot_timeout = 600
+    end
+  end
+end
