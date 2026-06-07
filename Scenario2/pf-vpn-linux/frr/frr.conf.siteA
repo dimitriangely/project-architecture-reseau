@@ -1,0 +1,11 @@
+frr version 7.5
+hostname siteA
+log stdout
+!
+interface enp0s8
+ ip ospf area 0
+!
+router ospf
+ network 192.168.10.0/24 area 0
+!
+line vty

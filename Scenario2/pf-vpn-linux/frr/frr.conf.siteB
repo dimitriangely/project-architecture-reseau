@@ -1,0 +1,14 @@
+frr version 7.5
+hostname siteB
+log stdout
+!
+interface wg0
+ ip ospf area 0
+ ip ospf network point-to-multipoint non-broadcast
+!
+router ospf
+ network 192.168.20.0/24 area 0
+ network 10.255.0.0/30 area 0
+ neighbor 10.255.0.1
+!
+line vty

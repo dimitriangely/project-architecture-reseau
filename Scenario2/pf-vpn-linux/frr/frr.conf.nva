@@ -1,0 +1,22 @@
+frr version 7.5
+hostname nva
+log stdout
+!
+interface enp0s8
+ ip ospf area 0
+!
+interface wg0
+ ip ospf area 0
+ ip ospf network point-to-multipoint non-broadcast
+!
+interface enp0s9
+ ip ospf area 0
+ ip ospf passive
+!
+router ospf
+ network 192.168.10.0/24 area 0
+ network 192.168.20.0/24 area 0
+ network 10.255.0.0/30 area 0
+ neighbor 10.255.0.2
+!
+line vty

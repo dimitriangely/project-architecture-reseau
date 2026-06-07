@@ -1,0 +1,3 @@
+.vagrant/
+wireguard/*.key
+wireguard/*.pub

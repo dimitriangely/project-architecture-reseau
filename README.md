@@ -36,20 +36,27 @@ Ce projet vise à construire une **maquette de réseau d’entreprise virtuelle*
 
 ### 🔹 Scénario 1 – Réseau SDN automatisé avec OSPF
 
-- 1 Contrôleur SDN (Ryu)
-- 2 Routeurs avec FRRouting (OSPF)
-- 2 Clients dans des sous-réseaux distincts
-- Utilisation d’Open vSwitch pour la connectivité
-- Scripts Bash pour l’automatisation
-- Tests de connectivité (ping, traceroute, iperf)
+- 1 Contrôleur SDN (Ryu + Open vSwitch)
+- 2 Routeurs avec FRRouting (OSPF area 0)
+- 2 Clients dans des sous-réseaux distincts (`192.168.1.0/30`, `192.168.2.0/30`)
+- Bus SDN commun `10.10.10.0/24` (OpenFlow sur le contrôleur)
+- Scripts Bash + Vagrant pour le déploiement automatisé
+- Script de validation `scripts/verify.sh` (ping inter-sites, OSPF, Ryu/OVS)
 
-### 🔹 Scénario 2 – Infrastructure sécurisée avec pfSense + VPN + OSPF
+**Documentation complète** : [`Scenario1/sdn-lab-dev2-zip/README.md`](Scenario1/sdn-lab-dev2-zip/README.md)  
+(topologie, interprétation des commandes `ovs-vsctl`, `dump-flows`, routes OSPF, dépannage)
 
-- 1 pfSense (firewall, VPN, OSPF)
-- Tunnel VPN site-à-site (Wireguard/IPsec)
-- Routage dynamique avec OSPF
-- Supervision via Prometheus + Grafana
-- Tests de résilience et sécurité
+### 🔹 Scénario 2 – Multi-sites, VPN WireGuard, OSPF et monitoring
+
+- 1 NVA (routeur hub), site principal (siteA), site distant (siteB), supervision (monitoring)
+- Tunnel **WireGuard** site-to-site NVA ↔ siteB
+- **Policy routing** : transit inter-sites 100 % chiffré via le tunnel
+- Routage dynamique **OSPF** (siteA ↔ NVA)
+- Supervision **Prometheus + Grafana**
+- Script de validation `scripts/verify.sh`
+
+**Documentation complète** : [`Scenario2/pf-vpn-linux/readme.md`](Scenario2/pf-vpn-linux/readme.md)  
+(topologie hub-and-spoke, policy routing, interprétation des tests WireGuard/OSPF/tcpdump, dépannage)
 
 ---
 
